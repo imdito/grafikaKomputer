@@ -6,11 +6,14 @@ import '../../utils/canvas_rasterizer.dart';
 import '../../utils/line_algorithms.dart';
 import 'canvas_state_mixin.dart';
 
+/// Mixin yang bertanggung jawab untuk menangani logika menggambar pada canvas
+/// (termasuk interaksi sentuh dan eksekusi algoritma garis).
 mixin CanvasDrawingMixin on CanvasStateMixin {
+  /// Menangani event ketukan (tap) pada canvas berdasarkan mode alat yang aktif.
   void handleCanvasTap(Offset position) {
     switch (selectedTool.value) {
-      case DrawingTool.point:
-        addPointFromTap(position);
+      case DrawingTool.select:
+        break;
       case DrawingTool.line:
         addLineFromTap(position);
       case DrawingTool.shape:
@@ -23,17 +26,20 @@ mixin CanvasDrawingMixin on CanvasStateMixin {
     }
   }
 
+  /// Menangani interaksi seret awal (drag start) untuk coretan bebas.
   void handlePanStart(Offset position) {
     if (selectedTool.value != DrawingTool.pen) return;
     pendingFreehandPoints.clear();
     pendingFreehandPoints.add(position);
   }
 
+  /// Menangani pergerakan jari/mouse (drag update) untuk coretan bebas.
   void handlePanUpdate(Offset position) {
     if (selectedTool.value != DrawingTool.pen) return;
     pendingFreehandPoints.add(position);
   }
 
+  /// Menyelesaikan goresan coretan bebas saat pengguna mengangkat jari/mouse.
   void handlePanEnd() {
     if (selectedTool.value != DrawingTool.pen) return;
     if (pendingFreehandPoints.isEmpty) return;
@@ -51,39 +57,7 @@ mixin CanvasDrawingMixin on CanvasStateMixin {
     pendingFreehandPoints.clear();
   }
 
-  void addPointFromTap(Offset position) {
-    final point = GrafkomPoint(
-      id: nextId(),
-      position: position,
-      radius: safeRadius(),
-      color: selectedColor.value,
-    );
-    points.add(point);
-    registerObject(CanvasObjectType.point, point.id);
-  }
-
-  void addPointFromInput() {
-    final x = double.tryParse(xController.text);
-    final y = double.tryParse(yController.text);
-
-    if (x == null || y == null) {
-      showInvalidInput('Masukkan nilai X dan Y titik berupa angka.');
-      return;
-    }
-
-    final point = GrafkomPoint(
-      id: nextId(),
-      position: Offset(x, y),
-      radius: safeRadius(),
-      color: selectedColor.value,
-    );
-    points.add(point);
-    registerObject(CanvasObjectType.point, point.id);
-
-    xController.clear();
-    yController.clear();
-  }
-
+  /// Menambahkan titik awal/akhir untuk mode garis dua-ketuk (two-tap line mode).
   void addLineFromTap(Offset position) {
     final start = pendingLineStart.value;
 
@@ -96,6 +70,7 @@ mixin CanvasDrawingMixin on CanvasStateMixin {
     pendingLineStart.value = null;
   }
 
+  /// Menambahkan garis berdasarkan input koordinat manual.
   void addLineFromInput() {
     final x1 = double.tryParse(x1Controller.text);
     final y1 = double.tryParse(y1Controller.text);
@@ -115,6 +90,7 @@ mixin CanvasDrawingMixin on CanvasStateMixin {
     y2Controller.clear();
   }
 
+  /// Menambahkan objek 2D baru (lingkaran, kotak, dll) berdasarkan posisi ketukan di canvas.
   void addShapeFromTap(Offset center) {
     _addShape(
       center: center,
@@ -123,6 +99,7 @@ mixin CanvasDrawingMixin on CanvasStateMixin {
     );
   }
 
+  /// Menambahkan objek 2D berdasarkan input koordinat manual.
   void addShapeFromInput() {
     final x = double.tryParse(shapeXController.text);
     final y = double.tryParse(shapeYController.text);
@@ -142,6 +119,7 @@ mixin CanvasDrawingMixin on CanvasStateMixin {
     shapeYController.clear();
   }
 
+  /// Membatalkan proses pembuatan garis yang masih menggantung (pending).
   void cancelPendingLine() {
     pendingLineStart.value = null;
   }

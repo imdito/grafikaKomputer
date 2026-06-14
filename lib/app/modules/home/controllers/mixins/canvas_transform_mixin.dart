@@ -5,7 +5,11 @@ import '../../utils/canvas_transformations.dart';
 import '../../utils/line_algorithms.dart';
 import 'canvas_state_mixin.dart';
 
+/// Mixin yang mengatur logika transformasi matriks 2D pada objek di canvas,
+/// seperti translasi, skala, rotasi, geseran (shear), dan pencerminan.
 mixin CanvasTransformMixin on CanvasStateMixin {
+  /// Mengaplikasikan translasi (perpindahan) pada objek yang dipilih
+  /// berdasarkan input dari sumbu X dan sumbu Y.
   void applyTranslation() {
     final dx = double.tryParse(translateXController.text);
     final dy = double.tryParse(translateYController.text);
@@ -26,6 +30,7 @@ mixin CanvasTransformMixin on CanvasStateMixin {
     );
   }
 
+  /// Mengaplikasikan skala (pembesaran/pengecilan) pada objek yang dipilih.
   void applyScale() {
     final sx = double.tryParse(scaleXController.text);
     final sy = double.tryParse(scaleYController.text);
@@ -54,6 +59,7 @@ mixin CanvasTransformMixin on CanvasStateMixin {
     );
   }
 
+  /// Mengaplikasikan rotasi pada objek yang dipilih berdasarkan sudut derajat tertentu.
   void applyRotation() {
     final degrees = double.tryParse(rotateController.text);
 
@@ -75,6 +81,7 @@ mixin CanvasTransformMixin on CanvasStateMixin {
     );
   }
 
+  /// Mengaplikasikan efek geseran/condong (shear/skew) pada objek yang dipilih.
   void applyShear() {
     final shearX = double.tryParse(shearXController.text);
     final shearY = double.tryParse(shearYController.text);
@@ -97,6 +104,7 @@ mixin CanvasTransformMixin on CanvasStateMixin {
     );
   }
 
+  /// Mencerminkan objek secara horizontal (terhadap sumbu Y lokal objek tersebut).
   void reflectHorizontal() {
     _transformSelected(
       point: (point) => point,
@@ -108,6 +116,7 @@ mixin CanvasTransformMixin on CanvasStateMixin {
     );
   }
 
+  /// Mencerminkan objek secara vertikal (terhadap sumbu X lokal objek tersebut).
   void reflectVertical() {
     _transformSelected(
       point: (point) => point,
@@ -119,6 +128,7 @@ mixin CanvasTransformMixin on CanvasStateMixin {
     );
   }
 
+  /// Mencerminkan objek secara global terhadap sumbu X tengah layar.
   void mirrorGlobalX() {
     const globalY = 900.0; // Setengah dari tinggi canvas 1800
     _transformSelected(
@@ -136,6 +146,7 @@ mixin CanvasTransformMixin on CanvasStateMixin {
     );
   }
 
+  /// Mencerminkan objek secara global terhadap sumbu Y tengah layar.
   void mirrorGlobalY() {
     const globalX = 1200.0; // Setengah dari lebar canvas 2400
     _transformSelected(
@@ -153,6 +164,7 @@ mixin CanvasTransformMixin on CanvasStateMixin {
     );
   }
 
+  /// Mencerminkan objek secara global terhadap titik pusat (origin) tengah layar.
   void mirrorGlobalOrigin() {
     const globalX = 1200.0;
     const globalY = 900.0;
@@ -178,6 +190,8 @@ mixin CanvasTransformMixin on CanvasStateMixin {
     );
   }
 
+  /// Fungsi bantu (helper) untuk menerapkan fungsi transformasi generik
+  /// sesuai dengan tipe objek yang sedang dipilih saat ini.
   void _transformSelected({
     required GrafkomPoint Function(GrafkomPoint point) point,
     required GrafkomLine Function(GrafkomLine line) line,

@@ -2,31 +2,64 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../data/models/canvas_models.dart';
 
+/// Mixin dasar yang menyimpan seluruh status (state) dan variabel reaktif untuk Canvas.
 mixin CanvasStateMixin on GetxController {
+  /// Daftar objek titik pada canvas
   final points = <GrafkomPoint>[].obs;
+  
+  /// Daftar objek garis pada canvas
   final lines = <GrafkomLine>[].obs;
+  
+  /// Daftar objek bentuk 2D pada canvas
   final shapes = <GrafkomShape>[].obs;
+  
+  /// Daftar area fill pada canvas
   final fills = <GrafkomFillRegion>[].obs;
+  
+  /// Daftar coretan bebas (freehand) pada canvas
   final freehands = <GrafkomFreehand>[].obs;
+  
+  /// Status visibilitas navbar melayang
+  final isNavbarVisible = true.obs;
+
+  /// Riwayat ID objek berdasar urutan penambahannya ke canvas
   final objectHistory = <CanvasObjectRef>[];
 
-  final selectedTool = DrawingTool.point.obs;
+  /// Alat gambar (tool) yang sedang aktif dipilih pengguna
+  final selectedTool = DrawingTool.select.obs;
+  
+  /// Algoritma garis yang akan digunakan saat membuat garis baru
   final selectedAlgorithm = LineAlgorithm.dda.obs;
+  
+  /// Bentuk 2D yang akan digunakan saat membuat objek bentuk baru
   final selectedShapeType = ShapeType.circle.obs;
+  
+  /// Warna primer yang saat ini dipilih
   final selectedColor = Rx<Color>(Colors.indigo);
+  
+  /// Titik mula saat menggambar garis dengan mode sentuh
   final pendingLineStart = Rx<Offset?>(null);
+  
+  /// Daftar titik coretan bebas yang sedang digambar secara langsung
   final pendingFreehandPoints = <Offset>[].obs;
+  
+  /// Referensi objek yang saat ini sedang disorot/dipilih
   final selectedObject = Rxn<CanvasObjectRef>();
+  
+  /// Posisi mouse saat ini ketika melayang (hover) di atas canvas
   final hoverPosition = Rxn<Offset>();
 
+  /// Memperbarui posisi kursor melayang di atas canvas
   void updateHoverPosition(Offset position) {
     hoverPosition.value = position;
   }
 
+  /// Menghapus posisi kursor saat kursor keluar dari batas canvas
   void clearHoverPosition() {
     hoverPosition.value = null;
   }
 
+  // Controller input teks untuk posisi dan dimensi
   final xController = TextEditingController();
   final yController = TextEditingController();
   final radiusController = TextEditingController(text: '6');
@@ -41,6 +74,7 @@ mixin CanvasStateMixin on GetxController {
   final shapeWidthController = TextEditingController(text: '120');
   final shapeHeightController = TextEditingController(text: '80');
 
+  // Controller input teks untuk matriks transformasi
   final translateXController = TextEditingController(text: '20');
   final translateYController = TextEditingController(text: '20');
   final scaleXController = TextEditingController(text: '1.2');
@@ -49,19 +83,33 @@ mixin CanvasStateMixin on GetxController {
   final shearXController = TextEditingController(text: '0.2');
   final shearYController = TextEditingController(text: '0');
 
+  /// Ketebalan standar objek garis/titik/coretan bebas yang sedang aktif
   final strokeWidth = 4.0.obs;
+  
+  /// Opasitas garis/coretan bebas
   final lineOpacity = 1.0.obs;
+  
+  /// Gaya garis (solid, dashed, dotted) untuk objek aktif
   final lineStyle = StrokeStyle.solid.obs;
 
+  /// Ketebalan garis luar untuk bentuk 2D
   final shapeStrokeWidth = 3.0.obs;
+  
+  /// Opasitas area bentuk 2D atau isi fill
   final shapeOpacity = 1.0.obs;
+  
+  /// Apakah bentuk 2D diisi warna
   final isFilledShape = false.obs;
 
   int _nextObjectId = 1;
+  
+  /// Menghasilkan ID unik untuk objek baru yang dibuat di canvas
   int nextId() => _nextObjectId++;
 
+  /// Kunci (Key) global yang mengikat komponen canvas untuk keperluan Export gambar
   final GlobalKey canvasKey = GlobalKey();
 
+  /// Mendapatkan titik pusat/koordinat tengah dari objek yang sedang dipilih
   Offset? get selectedObjectCenter {
     final ref = selectedObject.value;
     if (ref == null) return null;
@@ -89,6 +137,7 @@ mixin CanvasStateMixin on GetxController {
     }
   }
 
+  /// Menghasilkan label nama objek untuk ditampilkan di UI panel Editor Objek
   String get selectedObjectLabel {
     final ref = selectedObject.value;
     if (ref == null) return 'Tidak ada objek dipilih';

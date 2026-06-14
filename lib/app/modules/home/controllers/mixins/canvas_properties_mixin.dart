@@ -10,7 +10,10 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../data/models/canvas_models.dart';
 import 'canvas_state_mixin.dart';
 
+/// Mixin yang mengatur pengubahan properti (alat, gaya, warna) serta
+/// manajemen objek (pilih, hapus, undo, export).
 mixin CanvasPropertiesMixin on CanvasStateMixin {
+  /// Mengganti alat (tool) yang sedang aktif dan me-reset status operasi yang menggantung.
   void changeTool(DrawingTool tool) {
     selectedTool.value = tool;
     pendingLineStart.value = null;
@@ -28,34 +31,42 @@ mixin CanvasPropertiesMixin on CanvasStateMixin {
     selectedColor.value = color;
   }
 
+  /// Mengganti ketebalan garis/titik secara global
   void changeStrokeWidth(double value) {
     strokeWidth.value = value;
   }
 
+  /// Mengganti opasitas (transparansi) garis secara global
   void changeLineOpacity(double value) {
     lineOpacity.value = value;
   }
 
+  /// Mengganti gaya garis (solid, putus-putus) secara global
   void changeLineStyle(StrokeStyle style) {
     lineStyle.value = style;
   }
 
+  /// Mengganti ketebalan garis pinggir bentuk 2D secara global
   void changeShapeStrokeWidth(double value) {
     shapeStrokeWidth.value = value;
   }
 
+  /// Mengganti opasitas (transparansi) bentuk 2D secara global
   void changeShapeOpacity(double value) {
     shapeOpacity.value = value;
   }
 
+  /// Mengganti mode isi/tidak pada bentuk 2D secara global
   void toggleFilledShape(bool value) {
     isFilledShape.value = value;
   }
 
+  /// Memilih suatu objek di canvas berdasarkan referensi (ID dan tipe)
   void selectObject(CanvasObjectRef? ref) {
     selectedObject.value = ref;
   }
 
+  /// Memperbarui ketebalan (stroke width) khusus untuk objek yang sedang dipilih
   void updateSelectedThickness(double thickness) {
     final ref = selectedObject.value;
     if (ref == null) return;
@@ -77,6 +88,7 @@ mixin CanvasPropertiesMixin on CanvasStateMixin {
     }
   }
 
+  /// Memperbarui gaya garis (stroke style) khusus untuk objek yang sedang dipilih
   void updateSelectedStrokeStyle(StrokeStyle style) {
     final ref = selectedObject.value;
     if (ref == null) return;
@@ -95,6 +107,7 @@ mixin CanvasPropertiesMixin on CanvasStateMixin {
     }
   }
 
+  /// Menghapus objek yang saat ini sedang dipilih dari canvas
   void deleteSelectedObject() {
     final ref = selectedObject.value;
     if (ref == null) {
@@ -119,6 +132,7 @@ mixin CanvasPropertiesMixin on CanvasStateMixin {
     selectedObject.value = null;
   }
 
+  /// Membatalkan (undo) pembuatan objek terakhir di canvas
   void undoLast() {
     pendingLineStart.value = null;
 
@@ -165,6 +179,7 @@ mixin CanvasPropertiesMixin on CanvasStateMixin {
     }
   }
 
+  /// Menghapus semua objek yang ada di canvas
   void clearCanvas() {
     points.clear();
     lines.clear();
@@ -177,6 +192,7 @@ mixin CanvasPropertiesMixin on CanvasStateMixin {
     pendingFreehandPoints.clear();
   }
 
+  /// Mengekspor tampilan canvas saat ini ke format gambar PNG dan membagikannya
   Future<void> exportCanvas() async {
     try {
       final boundary = canvasKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;

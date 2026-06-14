@@ -3,33 +3,36 @@ import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
 import '../../../data/models/canvas_models.dart';
 class CanvasHint extends StatelessWidget {
-  const CanvasHint({required this.tool, required this.hasPendingLine});
+  const CanvasHint({super.key, required this.controller});
 
-  final DrawingTool tool;
-  final bool hasPendingLine;
+  final HomeController controller;
 
   @override
   Widget build(BuildContext context) {
-    final text = switch (tool) {
-      DrawingTool.point => 'Tap canvas untuk membuat titik',
-      DrawingTool.line when hasPendingLine =>
-        'Tap titik akhir garis atau tekan batal',
-      DrawingTool.line => 'Tap titik awal, lalu tap titik akhir garis',
-      DrawingTool.shape => 'Tap canvas untuk membuat benda 2D',
-      DrawingTool.fill => 'Tap di dalam area tertutup untuk mengisi warna',
-      DrawingTool.pen => 'Sentuh dan tarik (drag) untuk membuat coretan bebas',
-    };
+    return Obx(() {
+      final tool = controller.selectedTool.value;
+      final hasPendingLine = controller.pendingLineStart.value != null;
+      
+      final text = switch (tool) {
+        DrawingTool.select => 'Mode Pilih: Gunakan menu untuk memilih & mengedit objek',
+        DrawingTool.line when hasPendingLine => 'Tap titik akhir garis atau tekan batal',
+        DrawingTool.line => 'Tap titik awal, lalu tap titik akhir garis',
+        DrawingTool.shape => 'Tap canvas untuk membuat benda 2D',
+        DrawingTool.fill => 'Tap di dalam area tertutup untuk mengisi warna',
+        DrawingTool.pen => 'Sentuh dan tarik (drag) untuk membuat coretan bebas',
+      };
 
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.85),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: Text(text, style: const TextStyle(fontSize: 12)),
-      ),
-    );
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.85),
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Text(text, style: const TextStyle(fontSize: 12)),
+        ),
+      );
+    });
   }
 }
 
@@ -55,45 +58,6 @@ class CanvasNavigationHint extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class ObjectCounter extends StatelessWidget {
-  const ObjectCounter({
-    required this.totalPoints,
-    required this.totalLines,
-    required this.totalShapes,
-    required this.totalFills,
-  });
-
-  final int totalPoints;
-  final int totalLines;
-  final int totalShapes;
-  final int totalFills;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      children: [
-        Chip(
-          avatar: const Icon(Icons.circle, size: 16),
-          label: Text('$totalPoints titik'),
-        ),
-        Chip(
-          avatar: const Icon(Icons.show_chart, size: 16),
-          label: Text('$totalLines garis'),
-        ),
-        Chip(
-          avatar: const Icon(Icons.category_outlined, size: 16),
-          label: Text('$totalShapes benda'),
-        ),
-        Chip(
-          avatar: const Icon(Icons.format_color_fill, size: 16),
-          label: Text('$totalFills fill'),
-        ),
-      ],
     );
   }
 }

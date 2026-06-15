@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import '../controllers/home_controller.dart';
 import '../../../data/models/canvas_models.dart';
 class SelectionPanel extends StatelessWidget {
-  const SelectionPanel({required this.controller});
+  const SelectionPanel({super.key, required this.controller});
 
   final HomeController controller;
 

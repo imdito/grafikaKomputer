@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import 'app/data/grafkom_theme.dart';
 import 'app/routes/app_pages.dart';
 
 void main() {
@@ -15,13 +16,7 @@ class GrafkomApp extends StatelessWidget {
     return GetMaterialApp(
       title: 'Aplikasi Grafika Komputer',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.indigo,
-          brightness: Brightness.light,
-        ),
-        useMaterial3: true,
-      ),
+      theme: GrafkomTheme.buildTheme(),
       initialRoute: AppPages.initial,
       getPages: AppPages.routes,
     );

@@ -1,0 +1,49 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.project
+.settings/
+.vscode/
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Flutter/Dart/Pub-related
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+
+# Android-related
+**/android/app/key.properties
+**/android/local.properties
+**/android/**/generated/
+**/android/app/src/main/assets/flutter_assets
+/android/app/src/main/java/io/flutter/plugins/
+
+# iOS-related
+**/ios/Flutter/.last_build_id
+**/ios/Flutter/Ephemerals/
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Flutter/flutter_settings.json
+**/ios/Shared/Assets.xcassets/AppIcon.appiconset/[Jj][Pp][Ee][Gg]
+**/ios/Shared/Assets.xcassets/AppIcon.appiconset/[Pp][Nn][Gg]
+Podfile.lock
+
+# Web-related
+/web/manifest.json
+
+# Agents/AI logs
+.agents/
+features_context.md

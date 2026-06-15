@@ -1,51 +1,49 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../../data/models/canvas_models.dart';
+import '../../../../data/models/canvas_layer.dart';
 
 /// Mixin dasar yang menyimpan seluruh status (state) dan variabel reaktif untuk Canvas.
 mixin CanvasStateMixin on GetxController {
-  /// Daftar objek titik pada canvas
-  final points = <GrafkomPoint>[].obs;
-  
-  /// Daftar objek garis pada canvas
-  final lines = <GrafkomLine>[].obs;
-  
-  /// Daftar objek bentuk 2D pada canvas
-  final shapes = <GrafkomShape>[].obs;
-  
-  /// Daftar area fill pada canvas
-  final fills = <GrafkomFillRegion>[].obs;
-  
-  /// Daftar coretan bebas (freehand) pada canvas
-  final freehands = <GrafkomFreehand>[].obs;
-  
+  /// Daftar layer yang ada pada canvas
+  final layers = <CanvasLayer>[CanvasLayer(id: 1, name: 'Background')].obs;
+
+  /// Index layer yang sedang aktif untuk diedit
+  final activeLayerIndex = 0.obs;
+
+  /// Helper untuk mendapatkan layer yang sedang aktif
+  CanvasLayer get activeLayer => layers[activeLayerIndex.value];
+
   /// Status visibilitas navbar melayang
   final isNavbarVisible = true.obs;
+
+  /// Status visibilitas panel layer melayang
+  final isLayerPanelVisible = false.obs;
 
   /// Riwayat ID objek berdasar urutan penambahannya ke canvas
   final objectHistory = <CanvasObjectRef>[];
 
   /// Alat gambar (tool) yang sedang aktif dipilih pengguna
-  final selectedTool = DrawingTool.select.obs;
-  
+  final selectedTool = DrawingTool.primitives.obs;
+
   /// Algoritma garis yang akan digunakan saat membuat garis baru
   final selectedAlgorithm = LineAlgorithm.dda.obs;
-  
-  /// Bentuk 2D yang akan digunakan saat membuat objek bentuk baru
-  final selectedShapeType = ShapeType.circle.obs;
-  
+
   /// Warna primer yang saat ini dipilih
   final selectedColor = Rx<Color>(Colors.indigo);
-  
+
   /// Titik mula saat menggambar garis dengan mode sentuh
   final pendingLineStart = Rx<Offset?>(null);
-  
-  /// Daftar titik coretan bebas yang sedang digambar secara langsung
-  final pendingFreehandPoints = <Offset>[].obs;
-  
+
+  /// Titik P0 (Start) untuk pembuatan Kurva Bezier Kuadratik
+  final pendingCurveStart = Rx<Offset?>(null);
+
+  /// Titik P2 (End) untuk pembuatan Kurva Bezier Kuadratik
+  final pendingCurveEnd = Rx<Offset?>(null);
+
   /// Referensi objek yang saat ini sedang disorot/dipilih
   final selectedObject = Rxn<CanvasObjectRef>();
-  
+
   /// Posisi mouse saat ini ketika melayang (hover) di atas canvas
   final hoverPosition = Rxn<Offset>();
 
@@ -69,42 +67,35 @@ mixin CanvasStateMixin on GetxController {
   final x2Controller = TextEditingController();
   final y2Controller = TextEditingController();
 
-  final shapeXController = TextEditingController();
-  final shapeYController = TextEditingController();
-  final shapeWidthController = TextEditingController(text: '120');
-  final shapeHeightController = TextEditingController(text: '80');
-
-  // Controller input teks untuk matriks transformasi
-  final translateXController = TextEditingController(text: '20');
-  final translateYController = TextEditingController(text: '20');
-  final scaleXController = TextEditingController(text: '1.2');
-  final scaleYController = TextEditingController(text: '1.2');
-  final rotateController = TextEditingController(text: '15');
-  final shearXController = TextEditingController(text: '0.2');
-  final shearYController = TextEditingController(text: '0');
-
   /// Ketebalan standar objek garis/titik/coretan bebas yang sedang aktif
   final strokeWidth = 4.0.obs;
-  
+
   /// Opasitas garis/coretan bebas
   final lineOpacity = 1.0.obs;
-  
+
   /// Gaya garis (solid, dashed, dotted) untuk objek aktif
   final lineStyle = StrokeStyle.solid.obs;
 
   /// Ketebalan garis luar untuk bentuk 2D
   final shapeStrokeWidth = 3.0.obs;
-  
+
   /// Opasitas area bentuk 2D atau isi fill
   final shapeOpacity = 1.0.obs;
-  
-  /// Apakah bentuk 2D diisi warna
-  final isFilledShape = false.obs;
 
   int _nextObjectId = 1;
-  
+
   /// Menghasilkan ID unik untuk objek baru yang dibuat di canvas
   int nextId() => _nextObjectId++;
+
+  /// Mereset seluruh progres canvas dan struktur layer kembali ke awal
+  void clearAllProgress() {
+    layers.value = [CanvasLayer(id: 1, name: 'Background')];
+    activeLayerIndex.value = 0;
+    objectHistory.clear();
+    selectedObject.value = null;
+    pendingLineStart.value = null;
+    _nextObjectId = 1;
+  }
 
   /// Kunci (Key) global yang mengikat komponen canvas untuk keperluan Export gambar
   final GlobalKey canvasKey = GlobalKey();
@@ -114,27 +105,33 @@ mixin CanvasStateMixin on GetxController {
     final ref = selectedObject.value;
     if (ref == null) return null;
 
-    switch (ref.type) {
-      case CanvasObjectType.point:
-        final index = points.indexWhere((point) => point.id == ref.id);
-        return index == -1 ? null : points[index].position;
-      case CanvasObjectType.line:
-        final index = lines.indexWhere((line) => line.id == ref.id);
-        return index == -1 ? null : lines[index].center;
-      case CanvasObjectType.shape:
-        final index = shapes.indexWhere((shape) => shape.id == ref.id);
-        return index == -1 ? null : shapes[index].center;
-      case CanvasObjectType.fill:
-        final index = fills.indexWhere((fill) => fill.id == ref.id);
-        return index == -1
-            ? null
-            : (fills[index].offsets.isNotEmpty
-                ? fills[index].offsets.first
-                : null);
-      case CanvasObjectType.freehand:
-        final index = freehands.indexWhere((fh) => fh.id == ref.id);
-        return index == -1 ? null : freehands[index].center;
+    for (final layer in layers) {
+      switch (ref.type) {
+        case CanvasObjectType.point:
+          final index = layer.points.indexWhere((point) => point.id == ref.id);
+          if (index != -1) return layer.points[index].position;
+        case CanvasObjectType.line:
+          final index = layer.lines.indexWhere((line) => line.id == ref.id);
+          if (index != -1) return layer.lines[index].center;
+        case CanvasObjectType.shape:
+          final index = layer.shapes.indexWhere((shape) => shape.id == ref.id);
+          if (index != -1) return layer.shapes[index].center;
+        case CanvasObjectType.fill:
+          final index = layer.fills.indexWhere((fill) => fill.id == ref.id);
+          if (index != -1) {
+            return layer.fills[index].offsets.isNotEmpty
+                ? layer.fills[index].offsets.first
+                : null;
+          }
+        case CanvasObjectType.freehand:
+          final index = layer.freehands.indexWhere((fh) => fh.id == ref.id);
+          if (index != -1) return layer.freehands[index].center;
+        case CanvasObjectType.curve:
+          final index = layer.curves.indexWhere((c) => c.id == ref.id);
+          if (index != -1) return layer.curves[index].center;
+      }
     }
+    return null;
   }
 
   /// Menghasilkan label nama objek untuk ditampilkan di UI panel Editor Objek
@@ -152,34 +149,68 @@ mixin CanvasStateMixin on GetxController {
   }
 
   List<CanvasObjectOption> get objectOptions {
-    return [
-      for (var i = 0; i < points.length; i++)
-        CanvasObjectOption(
-          ref: CanvasObjectRef(type: CanvasObjectType.point, id: points[i].id),
-          label: 'Titik #${i + 1}  (id: ${points[i].id})',
-        ),
-      for (var i = 0; i < lines.length; i++)
-        CanvasObjectOption(
-          ref: CanvasObjectRef(type: CanvasObjectType.line, id: lines[i].id),
-          label: 'Garis #${i + 1}  (id: ${lines[i].id})',
-        ),
-      for (var i = 0; i < shapes.length; i++)
-        CanvasObjectOption(
-          ref: CanvasObjectRef(type: CanvasObjectType.shape, id: shapes[i].id),
-          label:
-              '${shapeTypeName(shapes[i].type)} #${i + 1}  (id: ${shapes[i].id})',
-        ),
-      for (var i = 0; i < fills.length; i++)
-        CanvasObjectOption(
-          ref: CanvasObjectRef(type: CanvasObjectType.fill, id: fills[i].id),
-          label: 'Fill Warna #${i + 1}  (id: ${fills[i].id})',
-        ),
-      for (var i = 0; i < freehands.length; i++)
-        CanvasObjectOption(
-          ref: CanvasObjectRef(type: CanvasObjectType.freehand, id: freehands[i].id),
-          label: 'Coretan #${i + 1}  (id: ${freehands[i].id})',
-        ),
-    ];
+    final options = <CanvasObjectOption>[];
+    for (int l = 0; l < layers.length; l++) {
+      final layer = layers[l];
+      final prefix = 'L${l + 1} - ';
+      for (var i = 0; i < layer.points.length; i++) {
+        options.add(
+          CanvasObjectOption(
+            ref: CanvasObjectRef(
+              type: CanvasObjectType.point,
+              id: layer.points[i].id,
+            ),
+            label: '${prefix}Titik #${i + 1}  (id: ${layer.points[i].id})',
+          ),
+        );
+      }
+      for (var i = 0; i < layer.lines.length; i++) {
+        options.add(
+          CanvasObjectOption(
+            ref: CanvasObjectRef(
+              type: CanvasObjectType.line,
+              id: layer.lines[i].id,
+            ),
+            label: '${prefix}Garis #${i + 1}  (id: ${layer.lines[i].id})',
+          ),
+        );
+      }
+      for (var i = 0; i < layer.shapes.length; i++) {
+        options.add(
+          CanvasObjectOption(
+            ref: CanvasObjectRef(
+              type: CanvasObjectType.shape,
+              id: layer.shapes[i].id,
+            ),
+            label:
+                '${prefix}${shapeTypeName(layer.shapes[i].type)} #${i + 1}  (id: ${layer.shapes[i].id})',
+          ),
+        );
+      }
+      for (var i = 0; i < layer.fills.length; i++) {
+        options.add(
+          CanvasObjectOption(
+            ref: CanvasObjectRef(
+              type: CanvasObjectType.fill,
+              id: layer.fills[i].id,
+            ),
+            label: '${prefix}Fill Warna #${i + 1}  (id: ${layer.fills[i].id})',
+          ),
+        );
+      }
+      for (var i = 0; i < layer.freehands.length; i++) {
+        options.add(
+          CanvasObjectOption(
+            ref: CanvasObjectRef(
+              type: CanvasObjectType.freehand,
+              id: layer.freehands[i].id,
+            ),
+            label: '${prefix}Coretan #${i + 1}  (id: ${layer.freehands[i].id})',
+          ),
+        );
+      }
+    }
+    return options;
   }
 
   String shapeTypeName(ShapeType type) {
@@ -219,16 +250,6 @@ mixin CanvasStateMixin on GetxController {
     return radius.clamp(2, 30).toDouble();
   }
 
-  double safeShapeWidth() {
-    final width = double.tryParse(shapeWidthController.text) ?? 120;
-    return width.clamp(10, 500).toDouble();
-  }
-
-  double safeShapeHeight() {
-    final height = double.tryParse(shapeHeightController.text) ?? 80;
-    return height.clamp(10, 500).toDouble();
-  }
-
   @override
   void onClose() {
     xController.dispose();
@@ -238,17 +259,7 @@ mixin CanvasStateMixin on GetxController {
     y1Controller.dispose();
     x2Controller.dispose();
     y2Controller.dispose();
-    shapeXController.dispose();
-    shapeYController.dispose();
-    shapeWidthController.dispose();
-    shapeHeightController.dispose();
-    translateXController.dispose();
-    translateYController.dispose();
-    scaleXController.dispose();
-    scaleYController.dispose();
-    rotateController.dispose();
-    shearXController.dispose();
-    shearYController.dispose();
+
     super.onClose();
   }
 }

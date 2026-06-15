@@ -14,19 +14,19 @@ class GrafkomFreehand {
 
   /// ID unik objek coretan bebas
   final int id;
-  
+
   /// Titik-titik yang membentuk goresan
   final List<Offset> points;
-  
+
   /// Ketebalan garis
   final double strokeWidth;
-  
+
   /// Gaya garis (solid, dashed, dll)
   final StrokeStyle strokeStyle;
-  
+
   /// Transparansi warna (0.0 - 1.0)
   final double opacity;
-  
+
   /// Warna garis
   final Color color;
 

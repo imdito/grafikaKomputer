@@ -6,6 +6,7 @@ export 'grafkom_line.dart';
 export 'grafkom_shape.dart';
 export 'grafkom_freehand.dart';
 export 'grafkom_fill_region.dart';
+export 'grafkom_curve.dart';
 
 /// Mengembalikan nama tipe bentuk dalam bahasa Indonesia
 String shapeTypeName(ShapeType type) {

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import '../../../data/models/canvas_models.dart';
 import '../controllers/home_controller.dart';
+import '../../../../features/output_primitives/pen_tool/pen_controller.dart';
+import '../../../../features/output_primitives/shape_tool/shape_controller.dart';
+import '../controllers/dock_controller.dart';
 import 'grafkom_canvas_painter.dart';
 
 /// Widget utama yang menangani Interaksi pengguna (Tap, Pan, Hover)
@@ -21,16 +24,26 @@ class InteractiveCanvas extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InteractiveViewer(
-      constrained: false,
-      boundaryMargin: const EdgeInsets.all(900),
-      minScale: 0.25,
+    final penController = Get.isRegistered<PenController>() ? Get.find<PenController>() : null;
+
+    return Obx(() {
+      return InteractiveViewer(
+        onInteractionStart: (details) {
+          if (Get.isRegistered<DockController>()) {
+            Get.find<DockController>().isToolPanelVisible.value = false;
+          }
+        },
+        panEnabled: controller.selectedTool.value == DrawingTool.hand,
+        scaleEnabled: true,
+        constrained: false,
+        boundaryMargin: const EdgeInsets.all(900),
+        minScale: 0.25,
       maxScale: 4,
-      child: Obx(() {
-        return SizedBox(
-          width: canvasSize.width,
-          height: canvasSize.height,
-          child: Stack(
+      child: SizedBox(
+        width: canvasSize.width,
+        height: canvasSize.height,
+        child: Obx(() {
+          return Stack(
             clipBehavior: Clip.none,
             children: [
               Positioned.fill(
@@ -49,19 +62,49 @@ class InteractiveCanvas extends StatelessWidget {
                     onTapDown: (details) {
                       controller.handleCanvasTap(details.localPosition);
                     },
-                    onPanStart: controller.selectedTool.value == DrawingTool.pen
+                    onPanStart: (controller.selectedTool.value == DrawingTool.pen || controller.selectedTool.value == DrawingTool.shape)
                         ? (details) {
-                            controller.handlePanStart(details.localPosition);
+                            if (Get.isRegistered<DockController>()) {
+                              final dockCtrl = Get.find<DockController>();
+                              dockCtrl.wasPanelVisibleBeforeDrag = dockCtrl.isToolPanelVisible.value;
+                              dockCtrl.isToolPanelVisible.value = false;
+                            }
+                            if (controller.selectedTool.value == DrawingTool.pen) {
+                              penController?.handlePanStart(details.localPosition);
+                            } else {
+                              if (Get.isRegistered<ShapeController>()) {
+                                Get.find<ShapeController>().handlePanStart(details.localPosition);
+                              }
+                            }
                           }
                         : null,
-                    onPanUpdate: controller.selectedTool.value == DrawingTool.pen
+                    onPanUpdate: (controller.selectedTool.value == DrawingTool.pen || controller.selectedTool.value == DrawingTool.shape)
                         ? (details) {
-                            controller.handlePanUpdate(details.localPosition);
+                            if (controller.selectedTool.value == DrawingTool.pen) {
+                              penController?.handlePanUpdate(details.localPosition);
+                            } else {
+                              if (Get.isRegistered<ShapeController>()) {
+                                Get.find<ShapeController>().handlePanUpdate(details.localPosition);
+                              }
+                            }
                           }
                         : null,
-                    onPanEnd: controller.selectedTool.value == DrawingTool.pen
+                    onPanEnd: (controller.selectedTool.value == DrawingTool.pen || controller.selectedTool.value == DrawingTool.shape)
                         ? (details) {
-                            controller.handlePanEnd();
+                            if (controller.selectedTool.value == DrawingTool.pen) {
+                              penController?.handlePanEnd();
+                            } else {
+                              if (Get.isRegistered<ShapeController>()) {
+                                Get.find<ShapeController>().handlePanEnd();
+                              }
+                            }
+                            if (Get.isRegistered<DockController>()) {
+                              final dockCtrl = Get.find<DockController>();
+                              if (dockCtrl.wasPanelVisibleBeforeDrag) {
+                                dockCtrl.isToolPanelVisible.value = true;
+                                dockCtrl.wasPanelVisibleBeforeDrag = false;
+                              }
+                            }
                           }
                         : null,
                     child: RepaintBoundary(
@@ -69,14 +112,15 @@ class InteractiveCanvas extends StatelessWidget {
                       child: CustomPaint(
                         size: canvasSize,
                         painter: GrafkomCanvasPainter(
-                          points: controller.points.toList(growable: false),
-                          lines: controller.lines.toList(growable: false),
-                          shapes: controller.shapes.toList(growable: false),
-                          fills: controller.fills.toList(growable: false),
-                          freehands: controller.freehands.toList(growable: false),
+                          layers: controller.layers.toList(growable: false),
                           pendingLineStart: controller.pendingLineStart.value,
-                          pendingFreehandPoints: controller.pendingFreehandPoints.toList(growable: false),
+                          pendingFreehandPoints: penController?.pendingFreehandPoints.toList(growable: false) ?? [],
                           selectedObject: controller.selectedObject.value,
+                          pendingCurveStart: controller.pendingCurveStart.value,
+                          pendingCurveEnd: controller.pendingCurveEnd.value,
+                          pendingShape: Get.isRegistered<ShapeController>()
+                              ? Get.find<ShapeController>().pendingShape.value
+                              : null,
                         ),
                       ),
                     ),
@@ -99,9 +143,10 @@ class InteractiveCanvas extends StatelessWidget {
                   ),
                 ),
             ],
-          ),
-        );
-      }),
-    );
+          );
+        }),
+      ),
+      );
+    });
   }
 }

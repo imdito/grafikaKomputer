@@ -35,7 +35,7 @@ class ShearController extends GetxController {
         line,
         (offset) => MatrixUtils.shearAround(offset, center, shx, shy),
       ),
-      shape: (shape) => shape,
+      shape: (shape) => shape.copyWith(shearX: shape.shearX + shx, shearY: shape.shearY + shy),
       curve: (curve) => _copyCurveWithTransformedEndpoints(
         curve,
         (offset) => MatrixUtils.shearAround(offset, center, shx, shy),

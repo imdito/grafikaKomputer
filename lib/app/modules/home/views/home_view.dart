@@ -47,7 +47,7 @@ class HomeView extends GetView<HomeController> {
             // ── Layer 1: Undo/Redo Pill (top-left) ──
             UndoRedoPill(controller: controller),
 
-            // ── Trash/Clear Progress Button (top-right) ──
+            // ── Top Right Action Buttons (Share & Trash) ──
             Positioned(
               top:
                   MediaQuery.of(context).padding.top +
@@ -57,12 +57,25 @@ class HomeView extends GetView<HomeController> {
                 blurSigma: GrafkomTheme.blurDock,
                 borderRadius: BorderRadius.circular(GrafkomTheme.radiusFull),
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                child: GlassIconButton(
-                  icon: Icons.delete_outline_rounded,
-                  tooltip: 'Hapus Semua Progres',
-                  size: 40,
-                  iconSize: 20,
-                  onPressed: () => _showDeleteConfirmation(context),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GlassIconButton(
+                      icon: Icons.ios_share_rounded,
+                      tooltip: 'Bagikan / Export',
+                      size: 40,
+                      iconSize: 20,
+                      onPressed: () => controller.exportCanvas(),
+                    ),
+                    const SizedBox(width: 4),
+                    GlassIconButton(
+                      icon: Icons.delete_outline_rounded,
+                      tooltip: 'Hapus Semua Progres',
+                      size: 40,
+                      iconSize: 20,
+                      onPressed: () => _showDeleteConfirmation(context),
+                    ),
+                  ],
                 ),
               ),
             ),

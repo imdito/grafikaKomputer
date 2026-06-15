@@ -132,7 +132,10 @@ class LayerPanel extends StatelessWidget {
                 return ReorderableListView.builder(
                   padding: EdgeInsets.zero,
                   itemCount: controller.layers.length,
-                  onReorderItem: (oldIndex, newIndex) {
+                  onReorder: (oldIndex, newIndex) {
+                    if (oldIndex < newIndex) {
+                      newIndex -= 1;
+                    }
                     final activeLayerObj = controller.layers[controller.activeLayerIndex.value];
                     
                     final item = controller.layers.removeAt(oldIndex);

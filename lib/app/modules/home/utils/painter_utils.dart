@@ -53,7 +53,7 @@ extension GrafkomCanvasExtension on Canvas {
     );
   }
 
-  /// Menerapkan matriks transformasi (Translasi, Rotasi, Skala, Shear, Flip) pada canvas 
+  /// Menerapkan matriks transformasi (Translasi, Rotasi, Skala, Shear, Flip) pada canvas
   /// sebelum menggambar suatu bentuk, lalu mengembalikan canvas ke state semula setelah selesai.
   void withShapeTransform(GrafkomShape shape, VoidCallback draw) {
     save();
@@ -61,10 +61,22 @@ extension GrafkomCanvasExtension on Canvas {
     rotate(shape.rotationRadians);
     transform(
       Float64List.fromList([
-        shape.flipX, shape.shearY, 0, 0,
-        shape.shearX, shape.flipY, 0, 0,
-        0, 0, 1, 0,
-        0, 0, 0, 1,
+        shape.flipX,
+        shape.shearY,
+        0,
+        0,
+        shape.shearX,
+        shape.flipY,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
       ]),
     );
     draw();
@@ -77,23 +89,37 @@ class PainterUtils {
   PainterUtils._();
 
   /// Membuat path/garis berdasar gaya (dashed/dotted)
-  static Path applyDashPattern(Path source, StrokeStyle style, double strokeWidth) {
+  static Path applyDashPattern(
+    Path source,
+    StrokeStyle style,
+    double strokeWidth,
+  ) {
     if (style == StrokeStyle.solid) return source;
     if (style == StrokeStyle.dashed) {
       final dashLen = (strokeWidth * 3).clamp(8.0, 28.0);
       final gapLen = (strokeWidth * 2).clamp(5.0, 18.0);
-      return dashPath(source, dashArray: CircularIntervalList<double>([dashLen, gapLen]));
+      return dashPath(
+        source,
+        dashArray: CircularIntervalList<double>([dashLen, gapLen]),
+      );
     }
     if (style == StrokeStyle.dotted) {
       final gapLen = (strokeWidth * 2.5).clamp(6.0, 20.0);
-      return dashPath(source, dashArray: CircularIntervalList<double>([1.0, gapLen]));
+      return dashPath(
+        source,
+        dashArray: CircularIntervalList<double>([1.0, gapLen]),
+      );
     }
     return source;
   }
 
   /// Mengecek apakah sebuah piksel pada index tertentu harus digambar
   /// berdasarkan gaya garis (digunakan saat merasterisasi piksel manual)
-  static bool isStrokeVisible(int index, double strokeWidth, StrokeStyle style) {
+  static bool isStrokeVisible(
+    int index,
+    double strokeWidth,
+    StrokeStyle style,
+  ) {
     if (style == StrokeStyle.solid) return true;
     if (style == StrokeStyle.dashed) {
       final dashLength = (strokeWidth * 3).clamp(8, 28).round();

@@ -17,28 +17,28 @@ class GrafkomLine {
 
   /// ID unik garis
   final int id;
-  
+
   /// Titik awal garis
   final Offset start;
-  
+
   /// Titik akhir garis
   final Offset end;
-  
+
   /// Algoritma pembuatan garis (DDA atau Bresenham)
   final LineAlgorithm algorithm;
-  
+
   /// Ketebalan garis
   final double strokeWidth;
-  
+
   /// Gaya garis (solid, putus-putus, titik)
   final StrokeStyle strokeStyle;
-  
+
   /// Transparansi warna (0.0 - 1.0)
   final double opacity;
-  
+
   /// Warna garis
   final Color color;
-  
+
   /// Titik-titik piksel aktual hasil dari algoritma rasterisasi
   final List<Offset> rasterPoints;
 

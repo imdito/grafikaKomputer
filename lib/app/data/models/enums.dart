@@ -1,8 +1,17 @@
 /// Enum untuk menentukan tipe alat gambar atau mode yang sedang aktif
-enum DrawingTool { select, line, shape, fill, pen }
+enum DrawingTool {
+  hand,
+  primitives,
+  shape,
+  fill,
+  pen,
+  curve,
+  attributes,
+  transformations,
+}
 
 /// Enum untuk menentukan tipe objek pada canvas
-enum CanvasObjectType { point, line, shape, fill, freehand }
+enum CanvasObjectType { point, line, shape, fill, freehand, curve }
 
 /// Enum untuk algoritma garis yang digunakan
 enum LineAlgorithm { dda, bresenham }

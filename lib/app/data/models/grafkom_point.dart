@@ -11,13 +11,13 @@ class GrafkomPoint {
 
   /// ID unik titik
   final int id;
-  
+
   /// Posisi titik di canvas
   final Offset position;
-  
+
   /// Ukuran/radius titik
   final double radius;
-  
+
   /// Warna titik
   final Color color;
 
